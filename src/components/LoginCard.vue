@@ -95,10 +95,10 @@ const register = async () => {
 	try {
 		const regData = {
 			username: newPhone.value,
-			//name: newUsername.value,
-			//clazzId: newClazz.value,
-			//sex: sex.value.id,
-			//role: role.value.id,
+			name: newUsername.value,
+			classID: Number(newClazz.value),
+			sex: sex.value.id,
+			role: role.value.id,
 			//schoolId: newSchool.value,
 			password: newPwd.value,
 			//avatar: tempAvatar,
@@ -131,7 +131,7 @@ const upload = async (e) => {
 	let config = {
 		headers: { 'Content-Type': 'multipart/form-data' }
 	}
-	await axios.post("/api/common/register/upload", param, config).then((res) => {
+	await axios.post("/api/v1/upload", param, config).then((res) => {
 		if (res.data.code = 200) {
 			ElMessage.success("上传成功，请勿继续上传，谢谢配合！")
 		} else {

@@ -14,10 +14,10 @@ const posts = ref([])
 const globalStore = useGlobalStore()
 const userInfo = computed(() => globalStore.userInfo)
 
-onMounted(async () => {
-	const postsResp = await ApiGet('home?token=' + Token.getToken())
-	posts.value = postsResp.obj
-})
+// onMounted(async () => {
+// 	const postsResp = await ApiGet('home?token=' + Token.getToken())
+// 	posts.value = postsResp.obj
+// })
 
 const router = useRouter()
 const newPostClick = () => {

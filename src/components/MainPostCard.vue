@@ -77,7 +77,7 @@ const editClick = () => {
 const delClick = async () => {
 	const headers = {
 		'Content-Type': 'application/json',
-		Authorization: Token.getToken()
+		//Authorization: Token.getToken()
 	}
 	console.log('props.postID = ' + props.postID)
 	const delResp = await axios.delete('/api/post/delete?postId=' + props.postID, { headers })

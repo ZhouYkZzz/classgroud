@@ -29,13 +29,13 @@ const upload = async (e) => {
     let config = {
         headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: Token.getToken()
+           // Authorization: Token.getToken()
         }
     }
     if (editPostId.value == '') {
         param.append('postId', editPostId.value)
         param.append('file', file)
-        await axios.post("/api/post/file/save", param, config).then((res) => {
+        await axios.post("/api/v1/upload", param, config).then((res) => {
             if (res.data.code = 200) {
                 ElMessage.success("上传成功，请勿继续上传，谢谢配合！")
                 editImage.value = res.data.obj[0]
@@ -46,7 +46,7 @@ const upload = async (e) => {
         param.append('postId', editPostId.value)
         param.append('url', editImage.value)
         param.append('file', file)
-        await axios.put("/api/post/file/update", param, config).then((res) => {
+        await axios.put("/api/v1/upload", param, config).then((res) => {
             if (res.data.code = 200) {
                 ElMessage.success("上传成功，请勿继续上传，谢谢配合！")
                 editImage.value = res.data.obj
@@ -62,7 +62,7 @@ const deleteClick = async () => {
     let config = {
         headers: {
             'Content-Type': 'multipart/form-data',
-            Authorization: Token.getToken()
+            //Authorization: Token.getToken()
         }
     }
     param.append('postId', editPostId.value)
@@ -83,23 +83,25 @@ const router = useRouter()
 const sendClick = async () => {
     const timestamp = getTimestamp()
     const data = {
-        title: editTitle.value,
-        detail: editDetail.value,
+        userID:0,
+        role:4,
+        //title: editTitle.value,
+        content: editDetail.value,
         image: editImage.value,
         postId: editPostId.value,
-        postTime: timestamp,
+        //postTime: timestamp,
         username: userInfo.value.username,
-        clazzId: userInfo.value.clazzId,
-        likes: globalStore.postCache[editPostId.value] ? (globalStore.postCache[editPostId.value].likes * 1) : 0
+        //clazzId: userInfo.value.clazzId,
+        //likes: globalStore.postCache[editPostId.value] ? (globalStore.postCache[editPostId.value].likes * 1) : 0
     }
 
-    const headers = {
-        'Content-Type': 'application/json',
-        Authorization: Token.getToken()
-    }
+   // const headers = {
+   //     'Content-Type': 'application/json',
+   //     Authorization: Token.getToken()
+   //}
 
     if (editPostId.value == '') {
-        await ApiPost('post/save', data)
+        await axios.post('/api/v1/moment', data)
     } else {
         // update post
         await axios.put('/api/post/update', data, { headers })
@@ -144,8 +146,8 @@ const getTimestamp = () => {
     <div class="col-container">
         <el-button class="main-width" type="primary" :icon="Promotion" plain @click="sendClick"
             style="margin-top: 20px;">发布</el-button>
-        <el-input class="main-width" style="margin-top: 10px;" v-model="editTitle" placeholder="输入标题…" autosize
-            type="textarea" />
+        <!-- <el-input class="main-width" style="margin-top: 10px;" v-model="editTitle" placeholder="输入标题…" autosize
+            type="textarea" /> -->
         <div style="height: 10px;"></div>
         <el-input class="main-width" v-model="editDetail" placeholder="输入正文…" :autosize="{ minRows: 3 }" type="textarea" />
         <div class="main-width word-count-text">字数：{{ editDetail.length }} / 9999</div>

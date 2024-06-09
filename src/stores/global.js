@@ -4,6 +4,7 @@ import { ref } from "vue";
 
 export const useGlobalStore = defineStore("global", () => {
   const userInfo = ref({
+    userID: "",
     username: "",
     name: "",
     clazzId: "",

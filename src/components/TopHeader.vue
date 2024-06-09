@@ -35,7 +35,7 @@ const uinfoEditClick = () => {
 
 onMounted(async () => {
     if (globalStore.userInfo.username === '') {
-        const userResp = await ApiGet('getUserinfoByToken?token=' + Token.getToken())
+       // const userResp = await ApiGet('getUserinfoByToken?token=' + Token.getToken())
         globalStore.setUserInfo(userResp.obj);
     }
 })
