@@ -88,7 +88,7 @@ const sendClick = async () => {
         //title: editTitle.value,
         content: editDetail.value,
         image: editImage.value,
-        postId: editPostId.value,
+        //postId: editPostId.value,
         //postTime: timestamp,
         username: userInfo.value.username,
         //clazzId: userInfo.value.clazzId,

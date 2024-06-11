@@ -66,7 +66,7 @@ const likeClick = async () => {
 		'Content-Type': 'application/json',
 	//	Authorization: Token.getToken()
 	}
-	const likeResp = await axios.put('/api/post/likes/update', data, { headers })
+	const likeResp = await axios.put('/api/post/likes/update', data)
 	postInfo.value.likes = likeResp.data.toString()
 }
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { Token } from "./storage";
 
-const baseUrl = "https://2310-2409-8a28-4f6-7ac-c0e-5da7-9c19-4e8.ngrok-free.app";
+const baseUrl = "https://574d-2409-8a28-4f6-255f-c0e-5da7-9c19-4e8.ngrok-free.app";
 const instance = axios.create({
   baseURL: baseUrl,
   timeout: 10000,

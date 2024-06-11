@@ -14,17 +14,31 @@ const posts = ref([])
 const globalStore = useGlobalStore()
 const userInfo = computed(() => globalStore.userInfo)
 
-// onMounted(async () => {
-// 	const postsResp = await ApiGet('home?token=' + Token.getToken())
-// 	posts.value = postsResp.obj
-// })
+onMounted(async () => {
+	const classID = 1; // 请根据实际情况设置classID
+	try {
+		const postsResp = await axios.get('/api/v1/moment', {
+			params: {
+				classID: classID
+			},
+			headers: {
+				'ngrok-skip-browser-warning': 'true'
+			}
+		});
+
+		posts.value = postsResp.data.data.momentList; // 修改为data.obj
+		console.log(posts.value);
+	} catch (error) {
+		console.error('Error fetching posts:', error);
+	}
+});
 
 const router = useRouter()
 const newPostClick = () => {
 	router.push({
 		name: 'postedit',
 		query: {
-			userId: userInfo.value.username
+			userId: 0
 		}
 	})
 }
@@ -36,8 +50,10 @@ const newPostClick = () => {
 		<el-main class="cards-list">
 			<el-button class="main-width" type="primary" :icon="Edit" plain @click="newPostClick">写一条动态…</el-button>
 			<div class="main-width" style="margin: 0 auto;">
-				<div class="card-item" v-if="posts.length != 0" v-for="post in posts" :key="post.postId">
-					<MainPostCard :postID="post.postId" class="post-card"></MainPostCard>
+				<div v-if="posts.length != 0">
+					<div class="card-item" v-for="post in posts" :key="post.postId">
+						<MainPostCard :postID="post.postId" class="post-card"></MainPostCard>
+					</div>
 				</div>
 			</div>
 			<div v-if="posts.length == 0" class="no-post">

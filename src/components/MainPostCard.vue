@@ -19,9 +19,9 @@ const showEdit = ref(false)
 const postInfo = ref({
 	username: '',
 	postId: '',
-	title: '',
+	//title: '',
 	detail: '',
-	clazzId: '',
+	classID: '',
 	likes: '',
 	image: '',
 	postTime: ''
@@ -119,7 +119,7 @@ const cardClick = () => {
 				<div style="margin-top: 9px; margin-right: 7px; font-size: 10px;">点赞：{{ postInfo.likes }}</div>
 			</div>
 			<div class="body-title">
-				<div class="info-title">{{ postInfo.title }}</div>
+				<div class="info-title">{{ postInfo.content }}</div>
 				<div class="info-time">{{ postInfo.postTime }}</div>
 				<div class="separator"></div>
 			</div>
