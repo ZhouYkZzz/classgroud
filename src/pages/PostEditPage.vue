@@ -83,14 +83,14 @@ const router = useRouter()
 const sendClick = async () => {
     const timestamp = getTimestamp()
     const data = {
-        userID:0,
+        userID:1,
         role:4,
         //title: editTitle.value,
         content: editDetail.value,
         image: editImage.value,
         //postId: editPostId.value,
         //postTime: timestamp,
-        username: userInfo.value.username,
+        classID: 1,
         //clazzId: userInfo.value.clazzId,
         //likes: globalStore.postCache[editPostId.value] ? (globalStore.postCache[editPostId.value].likes * 1) : 0
     }

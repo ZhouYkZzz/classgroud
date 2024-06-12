@@ -10,7 +10,7 @@ import { useGlobalStore } from '../stores/global'
 const globalStore = useGlobalStore()
 
 const props = defineProps({
-	postID: String,
+	momentID: String,
 	visitUserId: String
 })
 const showDelete = ref(false)
@@ -18,13 +18,13 @@ const showEdit = ref(false)
 
 const postInfo = ref({
 	username: '',
-	postId: '',
+	momentID: '',
 	//title: '',
-	detail: '',
+	content: '',
 	classID: '',
 	likes: '',
 	image: '',
-	postTime: ''
+	createTime: ''
 })
 const userInfo = ref({
 	username: '',
@@ -40,23 +40,22 @@ const roles = ['班主任', '老师', '家长', '学生']
 
 onMounted(async () => {
 	try {
-		const postItem = globalStore.postCache[props.postID]
+		const postItem = globalStore.postCache[props.momentID]
 		if (!postItem) {
-			const postResp = await ApiGet('post/get?postId=' + props.postID)
-			globalStore.addPostCache(postResp.obj)
-			postInfo.value = postResp.obj
+			const postResp = await axios.get('/api/v1/moment/detail' ,{
+				params: {
+					momentID: props.momentID
+				},
+			    headers: {
+				'ngrok-skip-browser-warning': 'true'
+				}
+			});
+			globalStore.addPostCache(postResp.data.data)
+			postInfo.value = postResp.data.data
 		} else {
 			postInfo.value = postItem
 		}
 
-		const userItem = globalStore.userCache[postInfo.value.username]
-		if (!userItem) {
-			const userResp = await ApiGet('getUserinfoById?username=' + postInfo.value.username)
-			globalStore.addUserCache(userResp.obj)
-			userInfo.value = userResp.obj
-		} else {
-			userInfo.value = userItem
-		}
 
 		showDelete.value = (globalStore.userInfo.username === userInfo.value.username) || globalStore.userInfo.role === '1'
 		showEdit.value = globalStore.userInfo.username === userInfo.value.username
@@ -70,7 +69,7 @@ const editClick = () => {
 	router.push({
 		name: "postedit",
 		query: {
-			postId: props.postID
+			momentID: props.momentID
 		}
 	})
 }
@@ -79,7 +78,7 @@ const delClick = async () => {
 		'Content-Type': 'application/json',
 		//Authorization: Token.getToken()
 	}
-	console.log('props.postID = ' + props.postID)
+	console.log('props.momentID = ' + props.momentID)
 	const delResp = await axios.delete('/api/post/delete?postId=' + props.postID, { headers })
 	console.log(delResp)
 	router.go(0)
@@ -97,7 +96,7 @@ const cardClick = () => {
 	router.push({
 		name: 'postinfo',
 		query: {
-			postId: postInfo.value.postId
+			momentID: postInfo.value.momentID
 		}
 	})
 }
@@ -116,17 +115,17 @@ const cardClick = () => {
 						<el-tag style="margin-left: 5px;">{{ roles[userInfo.role - 1] }}</el-tag>
 					</div>
 				</div>
-				<div style="margin-top: 9px; margin-right: 7px; font-size: 10px;">点赞：{{ postInfo.likes }}</div>
+				<div style="margin-top: 9px; margin-right: 7px; font-size: 10px;">点赞：{{ postInfo.likeCount }}</div>
 			</div>
 			<div class="body-title">
 				<div class="info-title">{{ postInfo.content }}</div>
-				<div class="info-time">{{ postInfo.postTime }}</div>
+				<div class="info-time">{{ postInfo.createTime }}</div>
 				<div class="separator"></div>
 			</div>
-			<div class="detail-block"></div>
+			<!-- <div class="detail-block"></div> -->
 			<!-- https://avatars.githubusercontent.com/u/67905897?v=4 -->
 			<el-image v-if="postInfo.image && postInfo.image != ''" :src="postInfo.image" class="body-image" />
-			<div class="body-detail">{{ postInfo.detail }}</div>
+			<!-- <div class="body-detail">{{ postInfo.content }}</div> -->
 		</el-card>
 		<div style="display: flex; flex-direction: column; margin-left: 10px;">
 			<el-icon @click="userClick" style="margin-top: 10px;">

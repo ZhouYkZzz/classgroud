@@ -7,67 +7,80 @@ import { Token } from '../utils/storage';
 import { useGlobalStore } from '../stores/global';
 
 const props = defineProps({
-	postId: String
+	momentID: String
 })
 
 const globalStore = useGlobalStore()
 
 const postInfo = ref({
 	username: '',
-	postId: '',
-	title: '',
-	detail: '',
-	clazzId: '',
-	likes: '',
+	userID: '',
+	momentID: '',
+	//title: '',
+	content: '',
+	classID: '',
+	likeCount: '',
 	image: '',
-	postTime: ''
+	createTime: ''
 })
 const userInfo = ref({
 	username: '',
 	name: '',
-	clazzId: '',
-	schoolId: '',
+	classID: '',
+	schoolID: '',
 	sex: '',
 	role: '',
 	avatar: '',
 	cover: ''
 })
 
+
+
 onMounted(async () => {
 	try {
-		const postItem = globalStore.postCache[postInfo.value.postId]
+		const postItem = globalStore.postCache[postInfo.value.momentID]
 		if (!postItem) {
-			const postResp = await ApiGet('post/get?postId=' + props.postId)
-			globalStore.addPostCache(postResp.obj)
-			postInfo.value = postResp.obj
+			const postResp = await axios.get('/api/v1/moment/detail' ,{
+				params: {
+					momentID: props.momentID
+				},
+			    headers: {
+				'ngrok-skip-browser-warning': 'true'
+				}
+			});
+			globalStore.addPostCache(postResp.data.data)
+			postInfo.value = postResp.data.data
 		} else {
-			postInfo.value = postItem
+			const postResp = await axios.get('/api/v1/moment/detail' ,{
+				params: {
+					momentID: props.momentID
+				},
+			    headers: {
+				'ngrok-skip-browser-warning': 'true'
+				}
+			});
+			globalStore.addPostCache(postResp.data.data)
+			postInfo.value = postResp.data.data
 		}
 
-		const userItem = globalStore.userCache[postInfo.value.username]
-		if (!userItem) {
-			const userResp = await ApiGet('getUserinfoById?username=' + postInfo.value.username)
-			globalStore.addUserCache(userResp.obj)
-			userInfo.value = userResp.obj
-		} else {
-			userInfo.value = userItem
-		}
+		
 	} catch (error) {
-		console.error(error);
+		console.error(error); 
 	}
 })
 
 const likeClick = async () => {
 	const data = {
-		postId: postInfo.value.postId,
-		likes: postInfo.value.likes * 1 + 1
+		momentID: postInfo.value.momentID,
+		likerID: globalStore.userInfo.userID,//喜欢人的id
+		likeeID: postInfo.userID//被喜欢人的id
 	}
 	const headers = {
-		'Content-Type': 'application/json',
+				'ngrok-skip-browser-warning': 'true'
 	//	Authorization: Token.getToken()
 	}
-	const likeResp = await axios.put('/api/post/likes/update', data)
-	postInfo.value.likes = likeResp.data.toString()
+	const likeResp = await axios.post('/api/v1/like', data)
+	postInfo.value.likeCount = likeResp.data.likeCount
 }
 
 const imageClick = () => {
@@ -94,18 +107,18 @@ const posterClick = () => {
 				<div style="padding-top: 9px; margin-left: 5px; font-size: 13px;">{{ userInfo.name }}</div>
 			</div>
 			<el-button style="margin-right: 7px; font-size: 10px;" type="primary" plain @click="likeClick">点赞：{{
-				postInfo.likes }}</el-button>
+				postInfo.likeCount }}</el-button>
 		</div>
 		<el-scrollbar class="body-title" height="84vh">
 			<div>
-				<div class="info-title">{{ postInfo.title }}</div>
-				<div class="info-time">{{ postInfo.postTime }}</div>
-				<div class="separator"></div>
+				<div class="info-title">{{ postInfo.content }}</div>
+				<div class="info-time">{{ postInfo.createTime }}</div>
+				<!-- <div class="separator"></div> -->
 			</div>
 			<!-- https://avatars.githubusercontent.com/u/67905897?v=4 -->
 			<el-image v-if="postInfo.image && postInfo.image != ''" :src="postInfo.image" class="body-image"
 				@click="imageClick" />
-			<div class="body-detail">{{ postInfo.detail }}</div>
+			<!-- <div class="body-detail">{{ postInfo.content }}</div> -->
 			<div style="height: 5vh;"></div>
 		</el-scrollbar>
 	</el-card>

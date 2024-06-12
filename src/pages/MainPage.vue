@@ -12,10 +12,10 @@ import { useGlobalStore } from '../stores/global';
 const posts = ref([])
 
 const globalStore = useGlobalStore()
-const userInfo = computed(() => globalStore.userInfo)
+const userInfo =  globalStore.userInfo
 
 onMounted(async () => {
-	const classID = 1; // 请根据实际情况设置classID
+	const classID=userInfo.classID; // 请根据实际情况设置classID
 	try {
 		const postsResp = await axios.get('/api/v1/moment', {
 			params: {
@@ -38,7 +38,7 @@ const newPostClick = () => {
 	router.push({
 		name: 'postedit',
 		query: {
-			userId: 0
+			userID: userInfo.userID,
 		}
 	})
 }
@@ -51,8 +51,8 @@ const newPostClick = () => {
 			<el-button class="main-width" type="primary" :icon="Edit" plain @click="newPostClick">写一条动态…</el-button>
 			<div class="main-width" style="margin: 0 auto;">
 				<div v-if="posts.length != 0">
-					<div class="card-item" v-for="post in posts" :key="post.postId">
-						<MainPostCard :postID="post.postId" class="post-card"></MainPostCard>
+					<div class="card-item" v-for="post in posts" :key="post.momentID">
+						<MainPostCard :momentID="post.momentID" class="post-card"></MainPostCard>
 					</div>
 				</div>
 			</div>

@@ -35,7 +35,15 @@ const beforeAvatarUpload = (rawFile) => {
 }
 
 const router = useRouter()
-
+const userInfo=ref({
+	userID:"",
+	username:"",
+	calssID:"",
+	schoolID:"",
+	sex:"",
+	role:"",
+	name:"",
+})
 const step = ref(1)
 const regShow = ref(false)
 const pwd = ref('')
@@ -79,7 +87,7 @@ const login = async () => {
 		const _data = response.data
 
 		if (_data.code == 200) {
-
+			globalStore.setUserInfo(_data.data)
 			router.push({
 				name: 'mainpage'
 			})
@@ -99,7 +107,7 @@ const register = async () => {
 			classID: Number(newClazz.value),
 			sex: sex.value.id,
 			role: role.value.id,
-			//schoolId: newSchool.value,
+			//schoolID: Number(newSchool.value),
 			password: newPwd.value,
 			//avatar: tempAvatar,
 			//cover: ref('bbb').value,

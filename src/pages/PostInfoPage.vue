@@ -7,21 +7,20 @@ import { Token } from '../utils/storage';
 import { ApiGet, ApiPost } from '../utils/req'
 import { useGlobalStore } from '../stores/global';
 import { ChatDotSquare } from '@element-plus/icons-vue'
-
+import axios from 'axios';
 const route = useRoute()
-const postID = route.query.postId
+const momentID = route.query.momentID
 const comments = ref([])
 const commentSenders = ref([])
 
 const globalStore = useGlobalStore()
-
+const postInfo=ref()
 const userInfo = computed(() => globalStore.userInfo)
 const commentToSend = ref({
-    commentId: '',
-    postId: '',
-    username: '',
+    commentID: '',
+    momentID:'',
+    userID: '',
     detail: '',
-    postTime: ''
 })
 const roles = ['班主任', '老师', '家长', '学生']
 const commentText = ref('')
@@ -30,20 +29,19 @@ const placeholderText = ref('写评论…')
 
 onMounted(async () => {
     try {
-        const commsResp = await ApiGet('comment/get?postId=' + postID)
-        comments.value = commsResp.obj
-
-        for (let i = 0; i < comments.value.length; i++) {
-            const comment = comments.value[i]
-            const commentSenderItem = globalStore.userCache[comment.username]
-            if (!commentSenderItem) {
-                const commUserResp = await ApiGet('getUserinfoById?username=' + comment.username)
-                commentSenders.value.push(commUserResp.obj)
-                globalStore.addUserCache(commUserResp.obj)
-            } else {
-                commentSenders.value.push(commentSenderItem)
-            }
-        }
+        //const commsResp = await ApiGet('comment/get?postId=' + momentID)
+        
+        const postResp = await axios.get('/api/v1/moment/detail' ,{
+				params: {
+					momentID: momentID
+				},
+			    headers: {
+				'ngrok-skip-browser-warning': 'true'
+				}
+			});
+            postInfo.value = postResp.data.data
+            comments.value = postInfo.value.commentList
+            console.log("ujh", JSON.stringify(comments.value));
     } catch (error) {
         console.error(error);
     }
@@ -60,16 +58,15 @@ const postCardClick = () => {
 
 const sendComment = async () => {
     commentToSend.value.detail = commentText.value
-    commentToSend.value.postId = postID
-    commentToSend.value.username = userInfo.value.username
-    commentToSend.value.commentId = commentToId.value
-    commentToSend.value.postTime = getTimestamp()
+    commentToSend.value.momentID = Number(momentID)
+    commentToSend.value.userID = Number(userInfo.value.userID)
 
-    await ApiPost('comment/save', commentToSend.value)
 
-    commentToId.value = ''
+    await axios.post('/api/v1/comment/save', commentToSend.value)
+
+    commentText.value = ''
     placeholderText.value = '写评论…'
-    router.go(0)
+    //router.go(0)
 }
 
 const getReplyInfo = (replyId) => {
@@ -105,12 +102,16 @@ const getTimestamp = () => {
     <TopHeader :showBackButton="true" />
     <el-row>
         <el-col :span="12">
-            <PostInfoCard :postId="postID" @click="postCardClick" />
+            <PostInfoCard :momentID="momentID" @click="postCardClick" />
         </el-col>
         <el-col :span="12" class="comments-area">
             <el-scrollbar style="padding-right: 15px;" height="95vh">
                 <!-- comments list -->
-                <div v-for="(comment, index) in comments" style="list-style-type: none;">
+                <div v-for="comment in comments" style="list-style-type: none;" :key="comment.commentID">
+                    <!-- <div style="text-align: left;">{{ comment.Content }}</div> -->
+                    <!-- <p>UserID: {{ comment.UserID }}</p>
+                    <p>Content: {{ comment.Content }}</p>
+                    <p>CreatedAt: {{ new Date(comment.CreatedAt).toLocaleString() }}</p> -->
                     <el-row class="comment-block">
                         <el-col :span="5">
                             <div class="comment-block-left">
@@ -132,7 +133,14 @@ const getTimestamp = () => {
                                         comment.postTime
                                     }}</div>
                                 </div>
-                                <div style="text-align: left;">{{ comment.detail }}</div>
+
+                                <div class="commentSty">
+                                    <!-- {{ comment.Content }} -->
+                                    ID:{{ comment.UserID }}
+                                      {{ new Date(comment.CreatedAt).toLocaleString() }}
+                                    <p class="commentFont">{{ comment.Content }}</p>
+                                </div>
+                                
                                 <div v-if="commentSenders[index] && comment.reply && comment.reply !== ''"
                                     class="reply-block">
                                     {{ globalStore.userCache[getReplyInfo(comment.reply).username].name }}：{{
@@ -161,7 +169,26 @@ const getTimestamp = () => {
     width: 50%;
     min-width: 300px;
 }
-
+.commentSty{
+    font-size: 15px;
+    color: #555555;
+    font-style: italic;
+    text-align: left;
+    align-items: left;
+    align-content: left;
+    margin-top: 5px;
+    background-color: #F0F0F0;
+    border-radius: 7px;
+    line-height: 15px;
+    max-height: 150px;
+    overflow: hidden;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+.commentFont{
+    font-size: 30px;
+}
 .comments-area {
     height: 85vh;
     padding: 2vh;
