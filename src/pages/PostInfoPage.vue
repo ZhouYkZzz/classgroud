@@ -5,6 +5,7 @@ import TopHeader from '../components/TopHeader.vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useGlobalStore } from '../stores/global';
 import axios from 'axios';
+import { ElMessage } from 'element-plus'; // 确保已导入 ElMessage
 
 const route = useRoute();
 const router = useRouter();
@@ -27,26 +28,56 @@ const commentToId = ref('');  // empty: to post
 const placeholderText = ref('写评论…');
 
 onMounted(async () => {
+    if (momentID && momentID !== '') {
+        const postItem = globalStore.postCache[momentID];
+        if (postItem) {
+            postInfo.value = postItem;
+            comments.value = postInfo.value.commentList;
+            // 填充 commentSenders
+            commentSenders.value = comments.value.map(comment => {
+                return globalStore.userCache[comment.userID] || {};
+            });
+            console.log("Comments from cache:", JSON.stringify(comments.value));
+            console.log("Comment Senders from cache:", JSON.stringify(commentSenders.value));
+        } else {
+            await fetchPostData();
+        }
+    }
+});
+
+const fetchPostData = async () => {
     try {
         const postResp = await axios.get('/api/v1/moment/detail', {
             params: { momentID: momentID },
             headers: { 'ngrok-skip-browser-warning': 'true' },
         });
-        postInfo.value = postResp.data.data;
-        comments.value = postInfo.value.commentList;
+        console.log('Post data response:', postResp.data); // 调试日志
 
-        // 填充 commentSenders
-        commentSenders.value = comments.value.map(comment => {
-            // 假设 globalStore.userCache 是一个根据 userID 获取用户信息的对象
-            return globalStore.userCache[comment.userID] || {};
-        });
+        // 将 code 转换为数字
+        const code = Number(postResp.data.code);
+        console.log('Post response code:', code, typeof code);
+        console.log('Post response data:', postResp.data.data, typeof postResp.data.data);
 
-        console.log("Comments:", JSON.stringify(comments.value));
-        console.log("Comment Senders:", JSON.stringify(commentSenders.value));
+        if (code === 200 && postResp.data.data) { // 使用严格等于
+            globalStore.addPostCache(postResp.data.data);
+            postInfo.value = postResp.data.data;
+            comments.value = postInfo.value.commentList;
+
+            // 填充 commentSenders
+            commentSenders.value = comments.value.map(comment => {
+                return globalStore.userCache[comment.userID] || {};
+            });
+
+            console.log("Comments:", JSON.stringify(comments.value));
+            console.log("Comment Senders:", JSON.stringify(commentSenders.value));
+        } else {
+            ElMessage.warning("获取帖子数据失败！");
+        }
     } catch (error) {
+        ElMessage.error("获取帖子数据失败！");
         console.error(error);
     }
-});
+};
 
 const replyClick = (index) => {
     placeholderText.value = '回复 @' + (commentSenders.value[index]?.name || '未知用户') + '：';
@@ -55,20 +86,65 @@ const replyClick = (index) => {
 
 const postCardClick = () => {
     placeholderText.value = '写评论…';
+    commentToId.value = ''; // 重置 commentToId
 };
 
 const sendComment = async () => {
-    commentToSend.value.detail = commentText.value;
+    // 验证评论内容是否为空
+    if (!commentText.value.trim()) {
+        ElMessage.error("评论内容不能为空");
+        return;
+    }
+
+    // 设置要发送的评论数据
+    commentToSend.value.detail = commentText.value.trim();
     commentToSend.value.momentID = Number(momentID);
     commentToSend.value.userID = Number(userInfo.value.userID);
 
+    // 仅在回复时设置 commentID
+    if (commentToId.value) {
+        commentToSend.value.commentID = Number(commentToId.value);
+    } else {
+        delete commentToSend.value.commentID; // 删除 commentID 字段
+    }
+
     try {
-        await axios.post('/api/v1/comment/save', commentToSend.value);
-        commentText.value = '';
-        placeholderText.value = '写评论…';
-        // 重新加载评论或直接添加新评论到 comments
-        // 例如： comments.value.push(newComment);
+        const response = await axios.post('/api/v1/comment/save', commentToSend.value, {
+            headers: { 'ngrok-skip-browser-warning': 'true' },
+        });
+        console.log("Comment save response:", response.data); // 调试日志
+
+        // 将 code 转换为数字
+        const code = Number(response.data.code);
+        console.log('Comment response code:', code, typeof code);
+        console.log('Comment response data:', response.data.data, typeof response.data.data);
+
+        if (code === 200) { // 使用严格等于
+            ElMessage.success("评论发送成功！");
+            commentText.value = '';
+            placeholderText.value = '写评论…';
+            commentToId.value = '';
+
+            // 如果后端返回了新评论的数据，需要将其映射到前端期望的字段
+            if (response.data.data) {
+                const newComment = {
+                    commentID: Number(response.data.data.commentID),
+                    userID: Number(response.data.data.userID),
+                    content: response.data.data.detail, // 映射 detail 到 content
+                    createdAt: response.data.data.momentTime, // 映射 momentTime 到 createdAt
+                    reply: '', // 根据需要设置 reply 字段
+                };
+                comments.value.push(newComment);
+                commentSenders.value.push(globalStore.userCache[newComment.userID] || {});
+            } else {
+                // 如果后端没有返回新评论数据，可以选择重新获取评论列表
+                await fetchPostData();
+            }
+        } else {
+            ElMessage.error(response.data.message || "评论发送失败！");
+        }
     } catch (error) {
+        ElMessage.error("评论发送失败，请重试！");
         console.error(error);
     }
 };
@@ -133,7 +209,7 @@ const getTimestamp = () => {
 
                                 <div class="commentSty">
                                     ID: {{ comment.userID }}
-                                    {{ new Date(comment.createdAt).toLocaleString() }}
+                                    <!-- 时间显示已移除 -->
                                     <p class="commentFont">{{ comment.content }}</p>
                                 </div>
                                 
@@ -155,9 +231,11 @@ const getTimestamp = () => {
                     v-model="commentText" 
                     class="bottom-input"
                     @keyup.enter.native="sendComment"
+                    show-word-limit
+                    :maxlength="200"
                 >
                     <template #append>
-                        <el-button @click="sendComment">发送</el-button>
+                        <el-button :disabled="!commentText.trim()" @click="sendComment">发送</el-button>
                     </template>
                 </el-input>
             </div>

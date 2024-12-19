@@ -1,4 +1,4 @@
-<script setup >
+<script setup>
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
@@ -15,14 +15,12 @@ const urlResp = ref('')
 const tempAvatar = 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'
 const dialogTitle = ref('注册账号')
 
-const handleAvatarSuccess = (
-	response,
-	uploadFile
-) => {
+const handleAvatarSuccess = (response, uploadFile) => {
 	imageUrl.value = URL.createObjectURL(uploadFile.raw)
 	urlResp.value = response.obj
 	ElMessage.info("请勿继续上传头像，谢谢配合！")
 }
+
 const beforeAvatarUpload = (rawFile) => {
 	if (rawFile.type !== 'image/jpeg') {
 		ElMessage.error('用户头像需为jpg格式')
@@ -35,14 +33,14 @@ const beforeAvatarUpload = (rawFile) => {
 }
 
 const router = useRouter()
-const userInfo=ref({
-	userID:"",
-	username:"",
-	calssID:"",
-	schoolID:"",
-	sex:"",
-	role:"",
-	name:"",
+const userInfo = ref({
+	userID: "",
+	username: "",
+	calssID: "",
+	schoolID: "",
+	sex: "",
+	role: "",
+	name: "",
 })
 const step = ref(1)
 const regShow = ref(false)
@@ -58,10 +56,12 @@ const roles = [
 	{ id: 1, label: '班主任', desc: '班主任可查看并删除本班级的任意动态，并拥有教师的所有权限' },
 	{ id: 2, label: '教师', desc: '教师可查看本班级动态，并可设置教学课程' },
 	{ id: 3, label: '家长', desc: '家长可查看本班级动态，并可设置对应子女的绑定信息' },
-	{ id: 4, label: '学生', desc: '学生可查看本班级动态，并编辑、删除自己发送的动态' },]
+	{ id: 4, label: '学生', desc: '学生可查看本班级动态，并编辑、删除自己发送的动态' },
+]
 const sexes = [
 	{ id: 1, label: "男" },
-	{ id: 2, label: "女" },]
+	{ id: 2, label: "女" },
+]
 const role = ref(roles[0])
 const sex = ref(sexes[0])
 
@@ -77,6 +77,17 @@ const handleDialogClose = () => {
 }
 
 const login = async () => {
+	// 验证用户名不能为空
+	if (!newPhone.value.trim()) {
+		ElMessage.error('用户名不能为空')
+		return
+	}
+	// 验证密码不能为空
+	if (!pwd.value.trim()) {
+		ElMessage.error('密码不能为空')
+		return
+	}
+
 	try {
 		const data = {
 			username: newPhone.value,
@@ -92,10 +103,19 @@ const login = async () => {
 				name: 'mainpage'
 			})
 		} else {
+			// 如果后端返回的是200且包含code字段，则在此处理
 			ElMessage.error(_data.message)
 		}
-	} catch (resp) {
-		ElMessage.error(resp.message || resp.data.message)
+	} catch (error) {
+		if (error.response) {
+			if (error.response.status === 500) {
+				ElMessage.error('用户名或密码错误')
+			} else {
+				ElMessage.error(error.response.data.message || '登录失败')
+			}
+		} else {
+			ElMessage.error(error.message || '登录失败')
+		}
 	}
 }
 
@@ -107,11 +127,11 @@ const register = async () => {
 			classID: Number(newClazz.value),
 			sex: sex.value.id,
 			role: role.value.id,
-			//schoolID: Number(newSchool.value),
+			// schoolID: Number(newSchool.value),
 			password: newPwd.value,
-			//avatar: tempAvatar,
-			//cover: ref('bbb').value,
-			//code: ref('000000').value
+			// avatar: tempAvatar,
+			// cover: ref('bbb').value,
+			// code: ref('000000').value
 		}
 
 		const response = await axios.post('/api/v1/user/register', regData)
@@ -122,7 +142,11 @@ const register = async () => {
 		step.value++
 	} catch (error) {
 		console.error(error)
-		ElMessage.error(error.message || error.data.message)
+		if (error.response && error.response.data && error.response.data.message) {
+			ElMessage.error(error.response.data.message)
+		} else {
+			ElMessage.error(error.message || '注册失败')
+		}
 	}
 }
 
@@ -140,7 +164,7 @@ const upload = async (e) => {
 		headers: { 'Content-Type': 'multipart/form-data' }
 	}
 	await axios.post("/api/v1/upload", param, config).then((res) => {
-		if (res.data.code = 200) {
+		if (res.data.code === 200) { // 修改为严格相等
 			ElMessage.success("上传成功，请勿继续上传，谢谢配合！")
 		} else {
 			ElMessage.warning("添加失败")
@@ -154,7 +178,7 @@ const upload = async (e) => {
 <template>
 	<el-card class="login-card">
 		<el-form-item prop="account">
-			<el-input v-model="newPhone" type="username" placeholder="用户名" @keyup.enter.native="login" />
+			<el-input v-model="newPhone" type="text" placeholder="用户名" @keyup.enter.native="login" />
 		</el-form-item>
 		<el-form-item prop="password">
 			<el-input v-model="pwd" type="password" placeholder="密码" @keyup.enter.native="login" />
@@ -185,7 +209,7 @@ const upload = async (e) => {
 				<el-col :span="1">
 					<div style="color: red">*</div>
 				</el-col>
-				<el-col :span="23"><el-input v-model="newPwd" placeholder="密码"></el-input></el-col>
+				<el-col :span="23"><el-input v-model="newPwd" type="password" placeholder="密码"></el-input></el-col>
 			</el-row>
 			<div style="height: 10px;" />
 			<el-row>
@@ -248,12 +272,21 @@ const upload = async (e) => {
 		</div>
 
 		<el-row style="display: flex; justify-content: center;">
-			<el-col v-if="step == 1 || step == 3" :span="6"><el-button @click="handleDialogClose"
-					plain>取消</el-button></el-col>
-			<el-col v-if="step > 1 && step < 3" :span="6"><el-button @click="step--" plain>上一步</el-button></el-col>
-			<el-col v-if="step < 2" :span="6"><el-button @click="step++" type="primary">下一步</el-button></el-col>
-			<el-col v-if="step == 2" :span="6"><el-button @click="register" type="primary">确认信息</el-button></el-col>
-			<el-col v-if="step == 3" :span="6"><el-button @click="handleDialogClose" type="primary">完成</el-button></el-col>
+			<el-col v-if="step == 1 || step == 3" :span="6">
+				<el-button @click="handleDialogClose" plain>取消</el-button>
+			</el-col>
+			<el-col v-if="step > 1 && step < 3" :span="6">
+				<el-button @click="step--" plain>上一步</el-button>
+			</el-col>
+			<el-col v-if="step < 2" :span="6">
+				<el-button @click="step++" type="primary">下一步</el-button>
+			</el-col>
+			<el-col v-if="step == 2" :span="6">
+				<el-button @click="register" type="primary">确认信息</el-button>
+			</el-col>
+			<el-col v-if="step == 3" :span="6">
+				<el-button @click="handleDialogClose" type="primary">完成</el-button>
+			</el-col>
 		</el-row>
 	</el-dialog>
 </template>

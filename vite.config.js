@@ -7,7 +7,7 @@ export default defineConfig({
     proxy: {
       "/api": {
         // 1.117.52.175
-        target: " https://67a9-205-178-183-233.ngrok-free.app",
+        target: "https://3932-38-207-137-250.ngrok-free.app",
         changeOrigin: true,
       },
     },
